@@ -2,9 +2,9 @@ package com.example.port_in_scan.global;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.github.tripko.domain.member.repository.UserRepository;
-import com.github.tripko.exception.AppException;
-import com.github.tripko.exception.ErrorCode;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
+import com.example.port_in_scan.exception.AppException;
+import com.example.port_in_scan.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
@@ -147,7 +147,7 @@ public class JwtService {
 
     //RefreshToken DB 저장(업데이트)
     public void updateRefreshToken(String userId, String refreshToken) {
-        com.github.tripko.domain.member.entity.User user = userRepository.findByEmail(userId)
+        com.example.port_in_scan.domain.member.entity.User user = userRepository.findByEmail(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND.getMessage(), ErrorCode.USER_NOT_FOUND));
 
         user.initRefreshToken(refreshToken);

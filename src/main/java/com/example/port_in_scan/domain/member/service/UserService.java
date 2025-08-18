@@ -1,6 +1,6 @@
 package com.example.port_in_scan.domain.member.service;
 
-import com.github.tripko.domain.member.repository.UserRepository;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

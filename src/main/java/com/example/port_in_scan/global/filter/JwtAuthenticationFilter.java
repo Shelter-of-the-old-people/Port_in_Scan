@@ -1,9 +1,9 @@
 package com.example.port_in_scan.global.filter;
 
-import com.github.tripko.domain.member.auth.entity.CustomUserDetails;
-import com.github.tripko.domain.member.entity.User;
-import com.github.tripko.domain.member.repository.UserRepository;
-import com.github.tripko.global.JwtService;
+import com.example.port_in_scan.domain.member.auth.entity.CustomUserDetails;
+import com.example.port_in_scan.domain.member.entity.User;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
+import com.example.port_in_scan.global.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

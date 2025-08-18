@@ -1,10 +1,10 @@
 package com.example.port_in_scan.domain.member.auth.service;
 
-import com.github.tripko.domain.member.auth.entity.CustomUserDetails;
-import com.github.tripko.domain.member.entity.User;
-import com.github.tripko.domain.member.repository.UserRepository;
-import com.github.tripko.exception.AppException;
-import com.github.tripko.exception.ErrorCode;
+import com.example.port_in_scan.domain.member.auth.entity.CustomUserDetails;
+import com.example.port_in_scan.domain.member.entity.User;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
+import com.example.port_in_scan.exception.AppException;
+import com.example.port_in_scan.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

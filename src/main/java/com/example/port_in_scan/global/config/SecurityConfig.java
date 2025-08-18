@@ -1,15 +1,15 @@
 package com.example.port_in_scan.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tripko.domain.member.auth.handler.LoginFailureHandler;
-import com.github.tripko.domain.member.auth.handler.LoginSuccessHandler;
-import com.github.tripko.domain.member.auth.handler.LogoutSuccessCustomHandler;
-import com.github.tripko.domain.member.auth.service.CustomUserDetailService;
-import com.github.tripko.domain.member.repository.UserRepository;
-import com.github.tripko.global.JwtService;
-import com.github.tripko.global.filter.CustomUsernamePasswordAuthenticationFilter;
-import com.github.tripko.global.filter.JwtAuthenticationFilter;
-import com.github.tripko.global.filter.LoginFilter;
+import com.example.port_in_scan.domain.member.auth.handler.LoginFailureHandler;
+import com.example.port_in_scan.domain.member.auth.handler.LoginSuccessHandler;
+import com.example.port_in_scan.domain.member.auth.handler.LogoutSuccessCustomHandler;
+import com.example.port_in_scan.domain.member.auth.service.CustomUserDetailService;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
+import com.example.port_in_scan.global.JwtService;
+import com.example.port_in_scan.global.filter.CustomUsernamePasswordAuthenticationFilter;
+import com.example.port_in_scan.global.filter.JwtAuthenticationFilter;
+import com.example.port_in_scan.global.filter.LoginFilter;
 import jakarta.servlet.Filter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

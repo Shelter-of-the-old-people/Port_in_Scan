@@ -1,10 +1,10 @@
 package com.example.port_in_scan.domain.member.auth.handler;
 
-import com.github.tripko.domain.member.entity.User;
-import com.github.tripko.domain.member.repository.UserRepository;
-import com.github.tripko.exception.AppException;
-import com.github.tripko.exception.ErrorCode;
-import com.github.tripko.global.JwtService;
+import com.example.port_in_scan.domain.member.entity.User;
+import com.example.port_in_scan.domain.member.repository.UserRepository;
+import com.example.port_in_scan.exception.AppException;
+import com.example.port_in_scan.exception.ErrorCode;
+import com.example.port_in_scan.global.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

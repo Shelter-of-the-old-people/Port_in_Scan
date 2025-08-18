@@ -1,6 +1,6 @@
 package com.example.port_in_scan.domain.member.auth.entity;
 
-import com.github.tripko.domain.member.entity.User;
+import com.example.port_in_scan.domain.member.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
