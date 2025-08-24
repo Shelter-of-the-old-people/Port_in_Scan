@@ -52,8 +52,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/test/**").permitAll()
-                        .requestMatchers("/v1/**").hasRole("USER") // v1 경로는 인증된 유저 등급 이상 접근 가능
-                        .requestMatchers("/v3/**").hasRole("ADMIN") // v3 경로는 관리자만 접근 가능
+                        .requestMatchers("/v1/**").hasRole("USER")
+                        .requestMatchers("/v3/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
                 // 로그아웃 설정
                 .logout((logout) -> logout

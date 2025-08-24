@@ -1,0 +1,8 @@
+jwt:
+  secretKey: ${JWT_SECRET_KEY}
+  access:
+    expiration: 1800000  # 30분 (30 * 60 * 1000 ms)
+    header: "Authorization"
+  refresh:
+    expiration: 1209600000  # 2주 (14 * 24 * 60 * 60 * 1000 ms)
+    header: "Authorization-refresh"
