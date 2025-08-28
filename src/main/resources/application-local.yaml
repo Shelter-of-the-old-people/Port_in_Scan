@@ -7,4 +7,4 @@ spring:
   config:
     activate:
       on-profile: local
-    import: "classpath:jwt.yaml"
+    import: jwt.yaml
