@@ -1,7 +1,7 @@
 spring:
   datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://${DB_URL}/port_in_scan?useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_URL}/port_in_scan
     username: ${DB_ID}
     password: ${DB_PW}
   config:

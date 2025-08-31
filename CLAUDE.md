@@ -23,15 +23,15 @@ This is a **Spring Boot 3.5.4 application called "Port_in_Scan"** - an AI-powere
 - **Architecture**: Domain-Driven Design
 
 ### Databases
-- **Primary Database**: MariaDB (main data storage)
-- **Vector Database**: PostgreSQL + pgvector (semantic search)
+- **Primary Database**: PostgreSQL (main data storage)
+- **Vector Database**: FAISS (Facebook AI Similarity Search) with file-based storage
 - **Testing**: H2 (in-memory for tests)
 - **Caching**: Redis
 
 ### AI/ML Integration
 - **AI Provider**: OpenAI GPT API
 - **Search Technology**: RAG (Retrieval-Augmented Generation)
-- **Vector Operations**: pgvector for similarity search
+- **Vector Operations**: FAISS for similarity search and indexing
 - **OCR**: Tesseract for PDF text extraction
 
 ### Additional Technologies
@@ -81,7 +81,7 @@ The application follows Domain-Driven Design with these main domains:
 
 #### **Search Domain** (`domain.search`)
 - AI-powered semantic search functionality
-- Vector similarity search using pgvector
+- Vector similarity search using FAISS
 - RAG-based query processing
 - Search history tracking
 - Popular searches management
@@ -103,7 +103,7 @@ The application follows Domain-Driven Design with these main domains:
 
 ### Database Architecture
 
-#### MariaDB Schema (Primary Data)
+#### PostgreSQL Schema (Primary Data)
 ```sql
 -- Users table
 users (
@@ -131,29 +131,35 @@ jobseeker_profiles (
 -- (Full schema available in project documentation)
 ```
 
-#### PostgreSQL + pgvector Schema (Vector Search)
-```sql
--- Vector embeddings table
-profile_embeddings (
-    embedding_id BIGINT PRIMARY KEY,
-    profile_id BIGINT,
-    content_type VARCHAR(50), -- 'cover_letter', 'skills', 'experience'
-    content_text TEXT,
-    embedding vector(1536), -- OpenAI embedding dimension
-    created_at TIMESTAMP
-);
+#### FAISS Vector Storage (Vector Search)
+```java
+// Vector embeddings stored in FAISS index files
+// - faiss_index.index: Main FAISS index file
+// - embedding_metadata.json: Mapping between vectors and profile data
 
--- Vector search index
-CREATE INDEX ON profile_embeddings USING ivfflat (embedding vector_cosine_ops);
+// Embedding metadata structure
+{
+    "embedding_id": "unique_id",
+    "profile_id": "profile_id",
+    "content_type": "cover_letter|skills|experience",
+    "content_text": "original_text",
+    "vector_position": "position_in_faiss_index",
+    "created_at": "timestamp"
+}
+
+// FAISS Configuration
+- Index Type: IndexIVFFlat or IndexHNSWFlat
+- Dimension: 1536 (OpenAI embedding dimension)
+- Distance Metric: Cosine Similarity
 ```
 
 ### Configuration
 - **Profiles**: `local`, `dev`, `prod`
-- **Database**: MariaDB for production, H2 for testing, PostgreSQL for vectors
+- **Database**: PostgreSQL for production, H2 for testing, FAISS for vectors
 - **External configs**: JWT settings in separate `jwt.yaml`
 - **Environment variables**:
-  - `DB_URL`, `DB_ID`, `DB_PW` for MariaDB
-  - `VECTOR_DB_URL`, `VECTOR_DB_USERNAME`, `VECTOR_DB_PASSWORD` for PostgreSQL
+  - `DB_URL`, `DB_ID`, `DB_PW` for PostgreSQL
+  - `FAISS_INDEX_PATH` for FAISS index file storage location
   - `JWT_SECRET_KEY` for JWT signing
   - `OPENAI_API_KEY` for AI integration
 
@@ -161,7 +167,7 @@ CREATE INDEX ON profile_embeddings USING ivfflat (embedding vector_cosine_ops);
 
 ### 1. AI-Powered Search System
 
-#### RAG Pipeline Service
+#### RAG Pipeline Service with FAISS
 ```java
 @Service
 public class AISearchService {
@@ -170,17 +176,17 @@ public class AISearchService {
     private OpenAIService openAIService;
     
     @Autowired
-    private VectorSearchService vectorSearchService;
+    private FAISSVectorSearchService faissVectorSearchService;
     
     public SearchResponse searchJobseekers(String query) {
         // 1. Query vectorization
-        List<Float> queryEmbedding = openAIService.createEmbedding(query);
+        float[] queryEmbedding = openAIService.createEmbedding(query);
         
-        // 2. Vector similarity search
-        List<ProfileEmbedding> similarProfiles = 
-            vectorSearchService.findSimilar(queryEmbedding, 10);
+        // 2. FAISS vector similarity search
+        List<SearchResult> similarProfiles = 
+            faissVectorSearchService.searchSimilar(queryEmbedding, 10);
         
-        // 3. Context building
+        // 3. Context building from FAISS results
         String context = buildContext(similarProfiles);
         
         // 4. GPT response generation
@@ -191,30 +197,40 @@ public class AISearchService {
 }
 ```
 
-#### Embedding Generation and Storage
+#### FAISS Embedding Generation and Indexing
 ```java
 @Service
-public class EmbeddingService {
+public class FAISSEmbeddingService {
+    
+    @Autowired
+    private FAISSIndexManager faissIndexManager;
     
     public void createProfileEmbeddings(Long profileId) {
         JobseekerProfile profile = profileRepository.findById(profileId);
+        List<EmbeddingData> embeddingBatch = new ArrayList<>();
         
         // Cover letter embeddings (Priority 1)
         List<CoverLetter> coverLetters = coverLetterRepository.findByProfileId(profileId);
         for (CoverLetter letter : coverLetters) {
-            List<Float> embedding = openAIService.createEmbedding(letter.getContent());
-            saveEmbedding(profileId, "cover_letter", letter.getContent(), embedding);
+            float[] embedding = openAIService.createEmbedding(letter.getContent());
+            embeddingBatch.add(new EmbeddingData(profileId, "cover_letter", 
+                letter.getContent(), embedding));
         }
         
         // Skills embeddings (Priority 2)
         String skillsText = buildSkillsText(profile.getSkills());
-        List<Float> skillsEmbedding = openAIService.createEmbedding(skillsText);
-        saveEmbedding(profileId, "skills", skillsText, skillsEmbedding);
+        float[] skillsEmbedding = openAIService.createEmbedding(skillsText);
+        embeddingBatch.add(new EmbeddingData(profileId, "skills", 
+            skillsText, skillsEmbedding));
         
         // Experience embeddings (Priority 3)
         String experienceText = buildExperienceText(profile.getExperiences());
-        List<Float> expEmbedding = openAIService.createEmbedding(experienceText);
-        saveEmbedding(profileId, "experience", experienceText, expEmbedding);
+        float[] expEmbedding = openAIService.createEmbedding(experienceText);
+        embeddingBatch.add(new EmbeddingData(profileId, "experience", 
+            experienceText, expEmbedding));
+        
+        // Batch add to FAISS index
+        faissIndexManager.addEmbeddings(embeddingBatch);
     }
 }
 ```
@@ -344,16 +360,17 @@ openai:
   temperature: 0.7
 ```
 
-### Vector Database Settings
+### FAISS Vector Index Settings
 ```yaml
-vector:
-  database:
-    url: ${VECTOR_DB_URL}
-    username: ${VECTOR_DB_USERNAME}
-    password: ${VECTOR_DB_PASSWORD}
+faiss:
+  index:
+    path: ${FAISS_INDEX_PATH:/data/faiss}
+    type: "IndexIVFFlat"  # or "IndexHNSWFlat" for better performance
+    nlist: 100  # number of clusters for IVF
   embedding:
     dimension: 1536
     similarity-threshold: 0.8
+    batch-size: 100  # for batch embedding operations
 ```
 
 ### File Upload Configuration
@@ -388,13 +405,13 @@ class AISearchServiceTest {
     private OpenAIService openAIService;
     
     @Mock
-    private VectorSearchService vectorSearchService;
+    private FAISSVectorSearchService faissVectorSearchService;
     
     @Test
     void testSearchJobseekers() {
         // Test AI search functionality
         when(openAIService.createEmbedding(anyString()))
-            .thenReturn(Arrays.asList(0.1f, 0.2f, 0.3f));
+            .thenReturn(new float[]{0.1f, 0.2f, 0.3f});
         
         SearchResponse response = aiSearchService.searchJobseekers("Java developer");
         
@@ -415,8 +432,8 @@ class AISearchServiceTest {
 ### Phase 2: AI Search Implementation (3 weeks)
 - OpenAI API integration
 - RAG system implementation
-- Vector database setup
-- Embedding generation pipeline
+- FAISS index setup and management
+- Embedding generation and indexing pipeline
 
 ### Phase 3: OCR and File Processing (2 weeks)
 - PDF upload and OCR processing
@@ -444,9 +461,9 @@ class AISearchServiceTest {
 ## Important Notes
 
 ### Development Environment
-- Database connection requires environment variables to be set
+- PostgreSQL database connection requires environment variables to be set
 - OpenAI API key required for AI features
-- Vector database must be properly configured with pgvector extension
+- FAISS index files must be properly initialized and stored in designated directory
 - OCR requires Tesseract installation
 
 ### API Documentation
